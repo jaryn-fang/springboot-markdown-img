@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="../jquery-2.1.3.min.js"></script>
+    <script src="../bootstrap-3.3.7/js/bootstrap.js"></script>
+    <script src="../clipboard/clipboard.js"></script>
+    <script src="../paginator/src/bootstrap-paginator.js"></script>
+    <script src="../viewer/dist/viewer.js"></script>
+    <link  href="../viewer/dist/viewer.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../bootstrap-3.3.7/css/bootstrap.css">
+    <link rel="stylesheet" href="../paginator/css/bootstrap-responsive.min.css">
+    <style>
+        .img_wrap{
+            padding-top:20px;
+            width:1360px;
+            text-align: center;
+            margin: 0 auto;
+        }
+        .img_item{
+            height:240px;
+            width:320px;
+            display: inline-block;
+            margin:24px 24px 24px 0;
+            position: relative;
+        }
+        .img_item:nth-child(4n){
+            margin-right: 0;
+        }
+        .img_in{
+            max-width: 320px;
+            max-height: 225px;
+            display: inline-block;
+            position: absolute;
+            left: 50%;
+            top:50%;
+            -webkit-transform:translate(-50%,-50%);
+            -moz-transform:translate(-50%,-50%);
+            transform:translate(-50%,-50%);
+        }
+        .img_btn {
+            position: absolute;
+            left: 80%;
+            bottom: 1px;
+        }
+        .page_nav{
+            width: 1360px;
+            text-align: right;
+            margin: 20px auto 0 auto;
+            padding-right: 5px;
+        }
+    </style>
+</head>
+<body>
+<div id="images" class="img_wrap">
+
+</div>
+
+<nav aria-label="Page navigation" class="page_nav">
+    <ul class="pagination">
+    </ul>
+</nav>
+<footer class="footer navbar-fixed-bottom ">
+    <div class="container" style="text-align: center">
+        粤ICP备15102101号
+    </div>
+</footer>
+</body>
+<script>
+    var golalnum = 1;
+    function deleteImg(id) {
+        $.ajax({
+            url: "/delete",
+            type: "get",
+            dataType: "text",
+            data: {id: id },
+            success: function (data) {
+                pagehtml(golalnum);
+            }
+        });
+    }
+
+    function pagehtml(pageNum) {
+        golalnum = pageNum;
+        $("#images").html("");
+        $(".pagination").html("");
+        $.ajax({
+            url:"/pagedata",
+            type:"get",
+            dataType:"json",
+            data: {pageNum : pageNum, pageSize : 8},
+            success:function (data) {
+                var datahtml = "";
+                $.each(data.list,function (i, obj) {
+                    datahtml += "<div class=\"img_item\"><img id=\"image\" class=\"img_in\" src=\""+obj.fullpath+"\" alt=\"Picture\"> <button class=\"btn btn-default btn-xs img_btn\" onclick=\"javascript:deleteImg("+obj.id+")\">删除</button></div>";
+                })
+                var pages  = data.pages;
+                var prePage = pageNum - 1;
+                var nextPage = pageNum + 1;
+                var html = "";
+                if(prePage > 0) {
+                    html += "<li>" + "<a href=\"javascript:pagehtml(" + prePage + ")\" aria-label=\"Previous\">" + "<span aria-hidden=\"true\">&laquo;</span>\n" + "</a>\n" + "</li>";
+                }
+                for(var i=1; i<= pages; i++) {
+                    var  disable = (i == pageNum ? "active" : "")
+                    html += "<li class = "+disable+"><a href=\"javascript:pagehtml("+ i +")\">"+i+"</a></li>";
+                }
+                if(nextPage <= pages) {
+                    html += "<li>" + "<a href=\"javascript:pagehtml(" + nextPage + ")\" aria-label=\"Next\">" + "<span aria-hidden=\"true\">&raquo;</span>\n" + "</a>\n" + "</li>";
+                }
+                $("#images").append(datahtml)
+                $('.img_item').viewer();
+                $(".pagination").append(html);
+            }
+        })
+    }
+    pagehtml(golalnum);
+
+</script>
+</html>

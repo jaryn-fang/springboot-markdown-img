@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<script src="../jquery-2.1.3.min.js"></script>
+<script src="../bootstrap-3.3.7/js/bootstrap.js"></script>
+<script src="../clipboard/clipboard.js"></script>
+<link rel="stylesheet" href="../bootstrap-3.3.7/css/bootstrap.css">
+
+<div class="row">
+    <div class="col-md-1 col-sm-1 col-xs-1 col-lg-2"></div>
+    <div class="col-md-10 col-sm-10 col-xs-10 col-lg-8">
+        <a href="list"><h1>markdown-img</h1></a>
+        <br/>
+        <div class="form-group">
+            <label for="content">方法一：粘贴图片试试</label><input id="content" class="form-control" type="text"></input><br/>
+        </div>
+        <div method="POST" enctype="multipart/form-data" class="form-group">
+            <div class="form-group">
+                <label for="file">方法二：上传图片</label>
+                <input id="file" type="file" name="file" />
+            </div>
+            <div class="form-group">
+                <label for="name">图片名字（可选）：</label>
+                <input id="name" type="text" name="name" class="form-control"/>
+            </div>
+            <input id="submit" type="submit" class="btn btn-default" value="上传"/>
+        </div>
+        <div class="form-inline">
+            <label for="result">markdown地址返回：</label>
+            <input id="result" type="text" class="form-control" style="width: 70%"/>
+            <button class="btn" data-clipboard-action="copy" data-clipboard-target="#result">Copy</button>
+        </div>
+    </div>
+    <div class="col-md-1 col-sm-1 col-xs-1 col-lg-2"></div>
+</div>
+
+<footer class="footer navbar-fixed-bottom ">
+    <div class="container" style="text-align: center">
+        <a href="http://www.miitbeian.gov.cn">粤ICP备15102101号</a>
+    </div>
+</footer>
+<script>
+
+   /* function redirmi() {
+        window.location.href = "http://www.miitbeian.gov.cn";
+    }*/
+    var clipboard = new ClipboardJS('.btn');
+
+    clipboard.on('success', function(e) {
+        console.log(e);
+    });
+
+    clipboard.on('error', function(e) {
+        console.log(e);
+    });
+
+    $("#submit").click(function () {
+        var formdata = new FormData();
+        formdata.append("file", $('#file')[0].files[0]);
+        formdata.append("name", $("#name").val());
+        $.ajax({
+            url: "/upload",
+            type: "POST",
+            dataType: "json",
+            data: formdata,
+            processData: false,  // 告诉jQuery不要去处理发送的数据
+            contentType: false,   // 告诉jQuery不要去设置Content-Type请求头
+            success: function (result) {
+                $("#result").val(result.msg);
+            },
+            error: function (result) {
+                alert(result);
+                console.log(result);
+            }
+        });
+    })
+
+    $("#content").on('paste', function (ev) {
+        var data = ev.clipboardData;
+        var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+        for (var index in items) {
+            var item = items[index];
+            if (item.kind === 'file') {
+                var blob = item.getAsFile();
+                var reader = new FileReader();
+                reader.onload = function (event) {
+                    var base64 = event.target.result;
+                    //ajax上传图片
+                    $.post("/upload_base64",{file:base64}, function (result) {
+                        $("#result").val(result);
+                        //alert(result);
+                    });
+                }; // data url!
+                reader.readAsDataURL(blob);
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
